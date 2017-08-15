@@ -14,7 +14,7 @@ public class InteractableController : MonoBehaviour
 	{
 		if (Input.GetKeyDown(KeyCode.E) && col.gameObject.IsInteractable())
 		{
-			col.gameObject.GetInteractableBehaviour().Interact();
+			col.gameObject.GetInteractableBehaviour().Interact(MovementController.instance);
 		}
 	}
 
