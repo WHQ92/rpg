@@ -1,0 +1,173 @@
+﻿using System.Collections;
+using UnityEngine;
+
+public class MovementController : MonoBehaviour
+{
+	public static MovementController instance;
+
+	private const float runningSpeed = 1.0f;
+	private const float turningSpeed = 6.0f;
+
+	private bool isAttacking;
+	private float horizontal;
+
+	private Vector3 screenCentre = new Vector3(0.5f, 0.5f, 0f);
+	private Camera camera;
+
+	private Animator animator;
+
+	private void Awake()
+	{
+		if (instance != null)
+		{
+			Destroy(this);
+		}
+		else
+		{
+			instance = this;
+		}
+	}
+
+	private void Start()
+	{
+		animator = GetComponentInChildren<Animator>();
+		horizontal = transform.eulerAngles.y;
+		camera = Camera.main;
+
+		Cursor.lockState = CursorLockMode.Locked;
+	}
+
+	private void Update()
+	{
+		HandleUserInput();
+		HandleZoom();
+	}
+
+	private void HandleUserInput()
+	{
+		HandleMovement();
+		HandleAttacks();
+		HandleRotation();
+	}
+
+	private void HandleMovement()
+	{
+		Vector3 translation = Vector3.zero;
+
+		if (Input.GetKey(KeyCode.W) && !isAttacking)
+		{
+			translation.z = 1.0f * Time.deltaTime * runningSpeed;
+		}
+
+		if (Input.GetKey(KeyCode.S) && !isAttacking)
+		{
+			translation.z = -1.0f * Time.deltaTime * runningSpeed;
+			animator.SetBool("Strafing", true);
+		}
+
+		if (Input.GetKey(KeyCode.D) && !isAttacking)
+		{
+			translation.x = 1.0f * Time.deltaTime * runningSpeed;
+		}
+
+		if (Input.GetKey(KeyCode.A) && !isAttacking)
+		{
+			translation.x = -1.0f * Time.deltaTime * runningSpeed;
+			animator.SetBool("Strafing", true);
+		}
+
+		if(NoMovementInput())
+		{
+			animator.SetBool("Moving", true);
+		}
+		else
+		{
+			float velocityXel = transform.InverseTransformDirection(GetComponent<Rigidbody>().velocity).x;
+			float velocityZel = transform.InverseTransformDirection(GetComponent<Rigidbody>().velocity).z;
+
+			//Update animator with movement values
+			animator.SetFloat("Velocity X", velocityXel / runningSpeed);
+			animator.SetFloat("Velocity Z", velocityZel / runningSpeed);
+
+			animator.SetBool("Moving", false);
+		}
+
+		transform.Translate(translation);
+	}
+
+	private bool NoMovementInput()
+	{
+		return (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D));
+	}
+
+	private void HandleAttacks()
+	{
+		if (Input.GetKeyDown(KeyCode.Alpha1))
+		{
+			Debug.Log("Attack1?");
+			animator.SetTrigger("Attack6Trigger");
+			StartCoroutine(LockMovementAndAttack());
+		}
+	}
+
+	public IEnumerator LockMovementAndAttack()
+	{
+		float lockTime = 0.6f;
+		
+		isAttacking = true;
+		animator.SetBool("Moving", false);
+		
+		yield return new WaitForSeconds(lockTime);
+
+		isAttacking = false;
+	}
+
+	private void HandleZoom()
+	{
+		if (camera.fieldOfView > 37)
+		{
+			camera.fieldOfView = camera.fieldOfView - 65.0f * Time.deltaTime;
+		}
+		if (camera.fieldOfView < 60)
+		{
+			camera.fieldOfView = camera.fieldOfView + 65.0f * Time.deltaTime;
+		}
+	}
+
+	private void HandleRotation()
+	{
+		if (!UIMenuController.instance.menu.activeSelf)
+		{
+			var mouseHorizontal = Input.GetAxis("Mouse X");
+			horizontal = (horizontal + turningSpeed * mouseHorizontal) % 360f;
+
+			transform.rotation = Quaternion.AngleAxis(horizontal, Vector3.up);
+		}
+	}
+
+	//Animation Events
+	void Hit()
+	{
+
+	}
+
+	void FootL()
+	{
+
+	}
+
+	void FootR()
+	{
+
+	}
+
+	void Jump()
+	{
+
+	}
+
+	void Land()
+	{
+
+	}
+}
